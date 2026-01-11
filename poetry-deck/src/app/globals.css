@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* default (light) */
+:root {
+  --background: #f1efea;
+  --foreground: #1f1f1f;
+  --card: #ffffff;
+  --border: #0000001a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --font-sans: var(--font-serif);
+}
+
+/* dark */
+[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --card: #111111;
+  --border: #ffffff26;
+}
+
+/* system (auto) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --card: #111111;
+    --border: #ffffff26;
+  }
+}
+
+/* custom image background */
+[data-theme="custom"] {
+  --background: #f1efea;
+  --foreground: #1f1f1f;
+  --card: #ffffffcc;
+  --border: #0000001a;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  color: var(--foreground);
+  font-family: var(--font-serif), serif;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* custom bg image helper */
+.custom-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+  pointer-events: none;
+}

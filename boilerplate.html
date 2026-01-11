@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poetry Deck | Fast & Fluid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f1efea; font-family: 'EB Garamond', serif; transition: background 0.5s; }
+        
+        /* GPU Accelerated Classes */
+        .card { 
+            will-change: transform, opacity;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+
+        .envelope-mode { background-color: #dcd9d0; }
+
+        /* The "Destroy" Effect */
+        .burn {
+            animation: burn-up 0.8s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes burn-up {
+            0% { transform: scale(1) translateY(0); opacity: 1; filter: grayscale(0) brightness(1); }
+            100% { transform: scale(0.8) translateY(-100px); opacity: 0; filter: grayscale(1) brightness(0.2) blur(10px); }
+        }
+
+        .create-panel {
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .create-panel.open { transform: translateY(0); }
+    </style>
+</head>
+<body class="h-screen flex flex-col items-center overflow-hidden">
+
+    <div class="fixed inset-0 pointer-events-none opacity-[0.03]" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/76/1k_Checkered_Noise.png');"></div>
+
+    <header class="w-full max-w-4xl p-8 flex justify-between items-center z-50">
+        <div class="italic text-2xl tracking-tighter cursor-pointer" onclick="location.reload()">PoetryDeck</div>
+        <button onclick="toggleCreate()" class="bg-black text-white px-6 py-2 rounded-full text-xs uppercase tracking-widest hover:scale-105 transition">Create Card</button>
+    </header>
+
+    <main id="main-stage" class="relative flex-1 w-full flex items-center justify-center p-6">
+        <div id="deck" class="relative w-72 h-96"></div>
+    </main>
+
+    <div id="create-ui" class="create-panel fixed inset-0 bg-white z-[60] p-10 flex flex-col items-center justify-center">
+        <button onclick="toggleCreate()" class="absolute top-10 right-10 text-2xl">✕</button>
+        <div class="w-full max-w-md space-y-8">
+            <h2 class="text-3xl italic">New Letter</h2>
+            <textarea id="poem-input" class="w-full h-40 border-b border-black/10 focus:outline-none text-2xl italic resize-none" placeholder="Write your poem here..."></textarea>
+            
+            <div class="grid grid-cols-3 gap-4">
+                <div onclick="selectImg(this)" class="cursor-pointer border-2 border-black rounded overflow-hidden h-20">
+                    <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=200" class="w-full h-full object-cover">
+                </div>
+                <div onclick="selectImg(this)" class="cursor-pointer border-2 border-transparent hover:border-black rounded overflow-hidden h-20">
+                    <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200" class="w-full h-full object-cover">
+                </div>
+                <div class="cursor-pointer border-2 border-dashed border-black/20 rounded flex items-center justify-center h-20 text-[10px] uppercase">Upload</div>
+            </div>
+
+            <button onclick="sendLetter()" class="w-full bg-black text-white py-4 rounded-full uppercase tracking-widest">Seal & Send</button>
+        </div>
+    </div>
+
+    <script>
+        const deck = document.getElementById('deck');
+        let isSpread = false;
+        let cardsData = [
+            { id: 1, text: "The moon is a ghost of the sun.", img: "https://images.unsplash.com/photo-1507502707541-f369a3b18502?w=400" },
+            { id: 2, text: "Wait for the rain to speak.", img: "https://images.unsplash.com/photo-1494005612480-90f50fd9376f?w=400" },
+            { id: 3, text: "Ink lasts longer than the hand that held the pen.", img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400" }
+        ];
+
+        function renderDeck() {
+            deck.innerHTML = '';
+            cardsData.forEach((data, i) => {
+                const card = document.createElement('div');
+                card.className = `card absolute inset-0 bg-white rounded-lg shadow-2xl overflow-hidden`;
+                card.style.zIndex = i;
+                
+                // Set initial stack transform
+                const offset = cardsData.length - 1 - i;
+                card.style.transform = `translateY(${offset * -10}px) rotate(${offset * -2}deg)`;
+                
+                card.innerHTML = `
+                    <img src="${data.img}" class="w-full h-1/2 object-cover grayscale">
+                    <div class="p-8">
+                        <p class="text-xl italic">"${data.text}"</p>
+                        <div class="absolute bottom-4 left-8 right-8 flex justify-between opacity-30 text-[10px] uppercase tracking-tighter">
+                            <span onclick="burnCard(event, this)">Destroy</span>
+                            <span>Share</span>
+                        </div>
+                    </div>
+                `;
+
+                card.onclick = (e) => handleTap(e, card);
+                deck.appendChild(card);
+            });
+        }
+
+        let lastTap = 0;
+        function handleTap(e, card) {
+            const now = Date.now();
+            if (now - lastTap < 300) {
+                toggleSpread();
+            } else {
+                if (!isSpread) shuffle();
+            }
+            lastTap = now;
+        }
+
+        function shuffle() {
+            const cards = deck.querySelectorAll('.card');
+            const topCard = cards[cards.length - 1];
+            topCard.style.transform = `translateX(150%) rotate(20deg)`;
+            topCard.style.opacity = '0';
+            
+            setTimeout(() => {
+                deck.prepend(topCard);
+                cardsData.unshift(cardsData.pop());
+                renderDeck();
+            }, 400);
+        }
+
+        function toggleSpread() {
+            isSpread = !isSpread;
+            const cards = deck.querySelectorAll('.card');
+            cards.forEach((card, i) => {
+                if (isSpread) {
+                    const x = (i - 1) * 200;
+                    card.style.transform = `translateX(${x}px) rotate(${(i-1)*5}deg)`;
+                } else {
+                    renderDeck();
+                }
+            });
+        }
+
+        function burnCard(e, el) {
+            e.stopPropagation();
+            const card = el.closest('.card');
+            card.classList.add('burn');
+            setTimeout(() => {
+                card.remove();
+                if(deck.children.length === 0) alert("Deck empty. Create more?");
+            }, 800);
+        }
+
+        function toggleCreate() {
+            document.getElementById('create-ui').classList.toggle('open');
+        }
+
+        function sendLetter() {
+            const text = document.getElementById('poem-input').value;
+            if(!text) return alert("Write something first.");
+            
+            document.body.classList.add('envelope-mode');
+            toggleCreate();
+            
+            // Simulation of "Mailing"
+            alert("Poem sealed. Generating Postal Link...");
+            setTimeout(() => {
+                alert("Link: poetrydeck.com/letter/x92jK - Send this to a friend!");
+                document.body.classList.remove('envelope-mode');
+            }, 1500);
+        }
+
+        function selectImg(el) {
+            document.querySelectorAll('.create-panel img').forEach(i => i.parentElement.classList.replace('border-black', 'border-transparent'));
+            el.classList.replace('border-transparent', 'border-black');
+        }
+
+        renderDeck();
+    </script>
+</body>
+</html>
