@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+export const dynamic = "force-dynamic";
+import React, { useState, Suspense } from "react";
 import { Deck } from "@/components/Deck";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useGallery } from "@/context/gallery";
@@ -50,7 +51,7 @@ function ComposePanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function Home() {
+function HomeClient() {
   const router = useRouter();
   const params = useSearchParams();
   const showCompose = params.get("compose") === "1";
@@ -78,5 +79,13 @@ export default function Home() {
       )}
       {showCompose && <ComposePanel onClose={() => router.push("/")} />}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-neutral-600">Loading…</div>}>
+      <HomeClient />
+    </Suspense>
   );
 }
