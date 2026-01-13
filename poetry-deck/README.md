@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Paper Trail — Pen Pal App
 
-## Getting Started
+A Next.js app for composing poems/cards, saving to a gallery, and optionally sealing & sending from the gallery. Built with the App Router, Tailwind, and client-side state.
 
-First, run the development server:
+## Quick Start
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node 18+ recommended
+- Install: `npm ci`
+- Dev: `npm run dev` → http://localhost:3000
+- Build: `npm run build`
+- Start: `npm start`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Compose modal: title + body only; auto-assigns image based on theme (no manual image inputs).
+- Gallery: neat responsive grid (no scatter), color images (no grayscale).
+- Seal & Send: appears only when selecting a card in the gallery.
+- Theme: simple options — System or Custom Upload (keeps background aligned to theme).
+- Home: shows the most recently saved card preview.
+- Profile & Auth: `/auth` page bypasses to `/profile` for testing.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy to Vercel
 
-## Learn More
+- Root Directory: set to `poetry-deck` in Project Settings.
+- Install Command: `npm ci`
+- Build Command: `npm run build`
+- Node Version: 18 or 20
+- External Images: allowed for Unsplash via `next.config.ts` (`remotePatterns` + `unoptimized: true`).
 
-To learn more about Next.js, take a look at the following resources:
+## Configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `next.config.ts`
+  - `images.remotePatterns` for Unsplash
+  - If build errors mention `reactCompiler`, remove it or put under `experimental`.
+- `tsconfig.json`
+  - Path alias: `@/*` → `./src/*`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Database (Optional)
 
-## Deploy on Vercel
+Currently, gallery/profile data is client-side for testing. To use MySQL:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Add env vars in Vercel (or `.env.local`): `MYSQL_URL`, `MYSQL_USER`, `MYSQL_PASSWORD`.
+2. Create API routes to read/write cards and profile data.
+3. Point gallery/profile components to the API.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Card Sizes
+
+Cards scale with screen via the grid. To tweak image height, adjust classes like:`h-32 sm:h-40 md:h-44 lg:h-52` in `src/app/gallery/page.tsx`.
+
+## Notes on Images & Capture
+
+Remote images are CORS-safe and supported in captures via `html2canvas` (`useCORS: true`) and `crossOrigin` on images. Unsplash is pre-configured.
+
+## Navigation
+
+Header includes links to Home, Gallery, Profile, Login. Add a back arrow on any page with `Link` to `/` if desired.
